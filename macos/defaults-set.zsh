@@ -566,10 +566,100 @@ function sysinfo {
 
     defaults write com.apple.finder ProhibitEmptyTrash -bool false
 
+    # Disable personalized advertisements and identifier tracking
+    echo '--- Disable personalized advertisements and identifier tracking'
+    defaults write com.apple.AdLib allowIdentifierForAdvertising -bool false
+    defaults write com.apple.AdLib allowApplePersonalizedAdvertising -bool false
+    defaults write com.apple.AdLib forceLimitAdTracking -bool true
+
+    # Disable remote Apple events
+    sudo systemsetup -setremoteappleevents off
+
+    # Disable "Do you want to enable Siri?" pop-up
+    defaults write com.apple.SetupAssistant 'DidSeeSiriSetup' -bool True
+
+    # Disable remote management service
+    sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -deactivate -stop
+
+    # Disable PowerShell telemetry
+    echo '--- Disable PowerShell Core telemetry'
+    command='export POWERSHELL_TELEMETRY_OPTOUT=1'
+    declare -a profile_files=("$HOME/.bash_profile" "$HOME/.zprofile")
+    for profile_file in "${profile_files[@]}"
+    do
+        touch "$profile_file"
+        if ! grep -q "$command" "${profile_file}"; then
+            echo "$command" >> "$profile_file"
+        fi
+    done
+
+    # Disable .NET Core CLI telemetry
+    command='export DOTNET_CLI_TELEMETRY_OPTOUT=1'
+    declare -a profile_files=("$HOME/.bash_profile" "$HOME/.zprofile")
+    for profile_file in "${profile_files[@]}"
+    do
+        touch "$profile_file"
+        if ! grep -q "$command" "${profile_file}"; then
+            echo "$command" >> "$profile_file"
+        fi
+    done
+
+    # Opt-out of homebrew analytics
+    export HOMEBREW_NO_ANALYTICS=1
+
+    # Disable Microsoft Office telemetry'
+    defaults write com.microsoft.office DiagnosticDataTypePreference -string ZeroDiagnosticData
+
+    # Enable Firefox policies so the telemetry can be configured.
+    sudo defaults write /Library/Preferences/org.mozilla.firefox EnterprisePoliciesEnabled -bool TRUE
+    # Disable sending usage data
+    sudo defaults write /Library/Preferences/org.mozilla.firefox DisableTelemetry -bool TRUE
+
+    # Disable Parallels Desktop advertisements
+    defaults write 'com.parallels.Parallels Desktop' 'ProductPromo.ForcePromoOff' -bool yes
+    defaults write 'com.parallels.Parallels Desktop' 'WelcomeScreenPromo.PromoOff' -bool yes
+
+    # Disable participation in Siri data collection
+    defaults write com.apple.assistant.support 'Siri Data Sharing Opt-In Status' -int 2
+
+    # Enable stealth mode
+    /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
+    sudo defaults write /Library/Preferences/com.apple.alf stealthenabled -bool true
+    defaults write com.apple.security.firewall EnableStealthMode -bool true
+
+    # Enable application firewall
+    /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
+    sudo defaults write /Library/Preferences/com.apple.alf globalstate -bool true
+    defaults write com.apple.security.firewall EnableFirewall -bool true
+
+    # Disable guest sign-in from login screen
+    sudo defaults write /Library/Preferences/com.apple.loginwindow GuestEnabled -bool NO
+    # Disable guest access to file shares over AF
+    sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server AllowGuestAccess -bool NO
+    # Disable guest access to file shares over SMB'
+    sudo defaults write /Library/Preferences/com.apple.AppleFileServer guestAccess -bool NO
+
+    # Disable insecure telnet protocol
+    sudo launchctl disable system/com.apple.telnetd
+
+    # Disable the insecure TFTP service
+    sudo launchctl disable 'system/com.apple.tftpd'
+
+    # Disable Bonjour multicast advertising
+    sudo defaults write /Library/Preferences/com.apple.mDNSResponder.plist NoMulticastAdvertisements -bool true
+
+    # Disable Captive portal
+    sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.captive.control.plist Active -bool false
+
+    # Disable macOS beta release installation for OS X Yosemite and newer (>= 10.10)
+    sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate 'AllowPreReleaseInstallation' -bool false
+
+
+
     # Set wallpaper
     #osascript -e 'tell application "Finder" to set desktop picture to POSIX file "/path/to/image.jpg"'
 	# TODO figure out how to set desktop wallpaper to https://images.unsplash.com/photo-1615195627275-48660e9cd84f?q=80&w=2911&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
-    sudo defaults write /Library/Preferences/com.apple.loginwindow DesktopPicture ""
+    # sudo defaults write /Library/Preferences/com.apple.loginwindow DesktopPicture ""
 
 # Ensure changes are applied
     for app in "Activity Monitor" \
